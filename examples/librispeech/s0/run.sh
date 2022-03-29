@@ -12,7 +12,7 @@ stop_stage=5
 # data
 data_url=www.openslr.org/resources/12
 # use your own data path
-datadir=../input/librispeech-clean
+datadir=/kaggle/input/librispeech-clean
 # wav data dir
 wave_data=data
 # Optional train_config
