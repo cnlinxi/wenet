@@ -59,7 +59,7 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
   echo "stage 0: Data preparation"
   for part in dev-clean test-clean dev-other test-other train-clean-100 train-clean-360 train-other-500; do
     # use underscore-separated names in data directories.
-    local/data_prep_torchaudio.sh ${datadir}/${part} $wave_data/${part//-/_}
+    local/data_prep_torchaudio.sh ${datadir}/${part}/LibriSpeech/${part} $wave_data/${part//-/_}
   done
 fi
 
