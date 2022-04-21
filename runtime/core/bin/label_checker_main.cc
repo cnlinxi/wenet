@@ -43,6 +43,7 @@ bool MapToLabel(const std::string &text,
       labels->push_back(id);
     }
   }
+  return true;
 }
 
 std::shared_ptr<fst::SymbolTable> MakeSymbolTableForFst(
@@ -194,8 +195,8 @@ int main(int argc, char *argv[]) {
       feature_pipeline->set_input_finished();
       decode_resource->fst = decoding_fst;
       LOG(INFO) << "num frames " << feature_pipeline->num_frames();
-      wenet::TorchAsrDecoder decoder(feature_pipeline, decode_resource,
-                                     *decode_config);
+      wenet::AsrDecoder decoder(feature_pipeline, decode_resource,
+                                *decode_config);
       while (true) {
         wenet::DecodeState state = decoder.Decode();
         if (state == wenet::DecodeState::kEndFeats) {
