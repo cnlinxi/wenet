@@ -2,16 +2,17 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 project(wenet VERSION 0.1)
 
-option(CXX11_ABI "whether to use CXX11_ABI libtorch" ON)
-option(BUILD_TESTING "whether build unit test" ON)
+option(CXX11_ABI "whether to use CXX11_ABI libtorch" OFF)
+option(FST_HAVE_BIN "whether to build fst binaries" OFF)
+option(BUILD_TESTING "whether to build unit test" ON)
 option(GRPC "whether to build with gRPC" OFF)
-# TODO(Binbin Zhang): Support ONNX as an build option
-set(ONNX ON)
+option(ONNX "whether to build with ONNX" OFF)
+
 set(CMAKE_VERBOSE_MAKEFILE on)
 
 include(FetchContent)
 include(ExternalProject)
-set(FETCHCONTENT_QUIET off)
+set(FETCHCONTENT_QUIET OFF)
 get_filename_component(fc_base "fc_base" REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(FETCHCONTENT_BASE_DIR ${fc_base})
 
@@ -25,9 +26,13 @@ else()
   add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 endif()
 
+if(ONNX)
+  include(onnx)
+  add_definitions(-DUSE_ONNX)
+endif()
+
 include(boost)
 include(libtorch)
-include(onnx)
 include(openfst)
 
 include_directories(
@@ -43,15 +48,12 @@ add_subdirectory(frontend)
 add_subdirectory(post_processor)
 add_subdirectory(kaldi)  # kaldi: wfst based decoder
 add_subdirectory(decoder)
+add_subdirectory(api)
 
-# wenet api
-add_library(wenet_api SHARED api/wenet_api.cc)
-target_link_libraries(wenet_api PUBLIC decoder frontend)
-
+# binary
 add_executable(api_main bin/api_main.cc)
 target_link_libraries(api_main PUBLIC wenet_api)
 
-# binary
 add_executable(decoder_main bin/decoder_main.cc)
 target_link_libraries(decoder_main PUBLIC decoder frontend)
 

@@ -11,6 +11,8 @@
 #include <memory>
 #include <utility>
 
+#include "utils/string.h"
+
 namespace wenet {
 
 Ort::Env OnnxAsrModel::env_ = Ort::Env(ORT_LOGGING_LEVEL_WARNING, "");
@@ -70,20 +72,23 @@ void OnnxAsrModel::Read(const std::string& model_dir) {
 
   // 1. Load sessions
   try {
-    Ort::Session encoder_session{env_, encoder_onnx_path.data(),
-                                 session_options_};
-    encoder_session_ =
-        std::make_shared<Ort::Session>(std::move(encoder_session));
-
-    Ort::Session rescore_session{env_, rescore_onnx_path.data(),
-                                 session_options_};
-    rescore_session_ =
-        std::make_shared<Ort::Session>(std::move(rescore_session));
-
-    Ort::Session ctc_session{env_, ctc_onnx_path.data(), session_options_};
-    ctc_session_ = std::make_shared<Ort::Session>(std::move(ctc_session));
+#ifdef _MSC_VER
+    encoder_session_ = std::make_shared<Ort::Session>(
+        env_, ToWString(encoder_onnx_path).c_str(), session_options_);
+    rescore_session_ = std::make_shared<Ort::Session>(
+        env_, ToWString(rescore_onnx_path).c_str(), session_options_);
+    ctc_session_ = std::make_shared<Ort::Session>(
+        env_, ToWString(ctc_onnx_path).c_str(), session_options_);
+#else
+    encoder_session_ = std::make_shared<Ort::Session>(
+        env_, encoder_onnx_path.c_str(), session_options_);
+    rescore_session_ = std::make_shared<Ort::Session>(
+        env_, rescore_onnx_path.c_str(), session_options_);
+    ctc_session_ = std::make_shared<Ort::Session>(env_, ctc_onnx_path.c_str(),
+                                                  session_options_);
+#endif
   } catch (std::exception const& e) {
-    LOG(ERROR) << "error when load onnx model";
+    LOG(ERROR) << "error when load onnx model: " << e.what();
     exit(0);
   }
 
@@ -176,6 +181,7 @@ std::shared_ptr<AsrModel> OnnxAsrModel::Copy() const {
 void OnnxAsrModel::Reset() {
   offset_ = 0;
   encoder_outs_.clear();
+  cached_feature_.clear();
   // Reset att_cache
   Ort::MemoryInfo memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);

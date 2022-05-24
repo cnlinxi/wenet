@@ -40,8 +40,8 @@ void GrpcConnectionHandler::OnSpeechStart() {
   response_->set_type(Response::server_ready);
   stream_->Write(*response_);
   feature_pipeline_ = std::make_shared<FeaturePipeline>(*feature_config_);
-  decoder_ = std::make_shared<AsrDecoder>(
-      feature_pipeline_, decode_resource_, *decode_config_);
+  decoder_ = std::make_shared<AsrDecoder>(feature_pipeline_, decode_resource_,
+                                          *decode_config_);
   // Start decoder thread
   decode_thread_ = std::make_shared<std::thread>(
       &GrpcConnectionHandler::DecodeThreadFunc, this);
@@ -77,18 +77,13 @@ void GrpcConnectionHandler::OnFinish() {
 
 void GrpcConnectionHandler::OnSpeechData() {
   // Read binary PCM data
-  const int16_t* pdata =
+  const int16_t* pcm_data =
       reinterpret_cast<const int16_t*>(request_->audio_data().c_str());
   int num_samples = request_->audio_data().length() / sizeof(int16_t);
-  std::vector<float> pcm_data(num_samples);
-  for (int i = 0; i < num_samples; i++) {
-    pcm_data[i] = static_cast<float>(*pdata);
-    pdata++;
-  }
   VLOG(2) << "Recieved " << num_samples << " samples";
   CHECK(feature_pipeline_ != nullptr);
   CHECK(decoder_ != nullptr);
-  feature_pipeline_->AcceptWaveform(pcm_data);
+  feature_pipeline_->AcceptWaveform(pcm_data, num_samples);
 }
 
 void GrpcConnectionHandler::SerializeResult(bool finish) {
