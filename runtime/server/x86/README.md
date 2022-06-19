@@ -56,11 +56,11 @@ export GLOG_logtostderr=1
 export GLOG_v=2
 wav_path=docker_resource/test.wav
 model_dir=docker_resource/model
-./build/decoder_main \
+./build/bin/decoder_main \
     --chunk_size -1 \
     --wav_path $wav_path \
     --model_path $model_dir/final.zip \
-    --dict_path $model_dir/words.txt 2>&1 | tee log.txt
+    --unit_path $model_dir/units.txt 2>&1 | tee log.txt
 ```
 
 Or you can do the WebSocket server/client testing as described in the `WebSocket` section.
@@ -82,11 +82,11 @@ export GLOG_logtostderr=1
 export GLOG_v=2
 wav_path=your_test_wav_path
 model_dir=your_model_dir
-./build/decoder_main \
+./build/bin/decoder_main \
     --chunk_size -1 \
     --wav_path $wav_path \
     --model_path $model_dir/final.zip \
-    --dict_path $model_dir/words.txt 2>&1 | tee log.txt
+    --unit_path $model_dir/units.txt 2>&1 | tee log.txt
 ```
 
 
@@ -102,11 +102,11 @@ model_dir=your_model_dir
 export GLOG_logtostderr=1
 export GLOG_v=2
 model_dir=your_model_dir
-./build/websocket_server_main \
+./build/bin/websocket_server_main \
     --port 10086 \
     --chunk_size 16 \
     --model_path $model_dir/final.zip \
-    --dict_path $model_dir/words.txt 2>&1 | tee server.log
+    --unit_path $model_dir/units.txt 2>&1 | tee server.log
 ```
 * Step 4. Start WebSocket client.
 
@@ -141,12 +141,12 @@ mkdir build && cd build && cmake -DGRPC=ON .. && cmake --build .
 export GLOG_logtostderr=1
 export GLOG_v=2
 model_dir=your_model_dir
-./build/grpc_server_main \
+./build/bin/grpc_server_main \
     --port 10086 \
     --workers 4 \
     --chunk_size 16 \
     --model_path $model_dir/final.zip \
-    --dict_path $model_dir/words.txt 2>&1 | tee server.log
+    --unit_path $model_dir/units.txt 2>&1 | tee server.log
 ```
 
 * Step 4. Start gRPC client.
@@ -155,7 +155,7 @@ model_dir=your_model_dir
 export GLOG_logtostderr=1
 export GLOG_v=2
 wav_path=your_test_wav_path
-./build/grpc_client_main \
+./build/bin/grpc_client_main \
     --hostname 127.0.0.1 --port 10086 \
     --wav_path $wav_path 2>&1 | tee client.log
 ```

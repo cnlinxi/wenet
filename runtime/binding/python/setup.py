@@ -60,12 +60,12 @@ class BuildExtension(build_ext):
             fst_lib = 'fc_base/openfst-build/src/lib/.libs'
             for ext in ['so', 'dylib']:
                 libs.extend(glob.glob(f'{src_dir}/{fst_lib}/libfst.{ext}'))
-            libs.extend(glob.glob(f'{src_dir}/{torch_lib}/libgomp*'))  # linux
-            libs.extend(glob.glob(f'{src_dir}/{torch_lib}/libiomp*'))  # macos
         else:
             libs.extend(glob.glob(f'{src_dir}/{torch_lib}/asmjit.dll'))
             libs.extend(glob.glob(f'{src_dir}/{torch_lib}/fbgemm.dll'))
             libs.extend(glob.glob(f'{src_dir}/{torch_lib}/uv.dll'))
+        libs.extend(glob.glob(f'{src_dir}/{torch_lib}/libgomp*'))  # linux
+        libs.extend(glob.glob(f'{src_dir}/{torch_lib}/libiomp5*'))  # macos/win
 
         for lib in libs:
             print(f"Copying {lib} to {self.build_lib}/")
@@ -82,7 +82,7 @@ package_name = "wenet"
 
 setuptools.setup(
     name=package_name,
-    version='1.0.3',
+    version='1.0.4',
     author="Binbin Zhang",
     author_email="binbzha@qq.com",
     package_dir={

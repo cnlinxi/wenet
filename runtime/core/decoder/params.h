@@ -1,6 +1,18 @@
-// Copyright 2021 Mobvoi Inc. All Rights Reserved.
-// Author: binbinzhang@mobvoi.com (Binbin Zhang)
-//         di.wu@mobvoi.com (Di Wu)
+// Copyright (c) 2020 Mobvoi Inc (Binbin Zhang, Di Wu)
+//               2022 Binbin Zhang (binbzha@qq.com)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 
 #ifndef DECODER_PARAMS_H_
 #define DECODER_PARAMS_H_
@@ -61,11 +73,10 @@ DEFINE_int32(nbest, 10, "nbest for ctc wfst or prefix search");
 
 // SymbolTable flags
 DEFINE_string(dict_path, "",
-              "dict symbol table path, it's same as unit_path when we don't "
-              "use LM in decoding");
-DEFINE_string(
-    unit_path, "",
-    "e2e model unit symbol table, is used to get timestamp of the result");
+              "dict symbol table path, required when LM is enabled");
+DEFINE_string(unit_path, "",
+              "e2e model unit symbol table, it is used in both "
+              "with/without LM scenarios for context/timestamp");
 
 // Context flags
 DEFINE_string(context_path, "", "context path, is used to build context graph");
@@ -131,30 +142,28 @@ std::shared_ptr<DecodeResource> InitDecodeResourceFromFlags() {
 #endif
   }
 
-  std::shared_ptr<fst::Fst<fst::StdArc>> fst = nullptr;
-  if (!FLAGS_fst_path.empty()) {
-    LOG(INFO) << "Reading fst " << FLAGS_fst_path;
-    fst.reset(fst::Fst<fst::StdArc>::Read(FLAGS_fst_path));
-    CHECK(fst != nullptr);
-  }
-  resource->fst = fst;
-
-  LOG(INFO) << "Reading symbol table " << FLAGS_dict_path;
-  auto symbol_table = std::shared_ptr<fst::SymbolTable>(
-      fst::SymbolTable::ReadText(FLAGS_dict_path));
-  resource->symbol_table = symbol_table;
-
-  std::shared_ptr<fst::SymbolTable> unit_table = nullptr;
-  if (!FLAGS_unit_path.empty()) {
-    LOG(INFO) << "Reading unit table " << FLAGS_unit_path;
-    unit_table = std::shared_ptr<fst::SymbolTable>(
-        fst::SymbolTable::ReadText(FLAGS_unit_path));
-    CHECK(unit_table != nullptr);
-  } else if (fst == nullptr) {
-    LOG(INFO) << "Use symbol table as unit table";
-    unit_table = symbol_table;
-  }
+  LOG(INFO) << "Reading unit table " << FLAGS_unit_path;
+  auto unit_table = std::shared_ptr<fst::SymbolTable>(
+      fst::SymbolTable::ReadText(FLAGS_unit_path));
+  CHECK(unit_table != nullptr);
   resource->unit_table = unit_table;
+
+  if (!FLAGS_fst_path.empty()) {  // With LM
+    CHECK(!FLAGS_dict_path.empty());
+    LOG(INFO) << "Reading fst " << FLAGS_fst_path;
+    auto fst = std::shared_ptr<fst::Fst<fst::StdArc>>(
+        fst::Fst<fst::StdArc>::Read(FLAGS_fst_path));
+    CHECK(fst != nullptr);
+    resource->fst = fst;
+
+    LOG(INFO) << "Reading symbol table " << FLAGS_dict_path;
+    auto symbol_table = std::shared_ptr<fst::SymbolTable>(
+        fst::SymbolTable::ReadText(FLAGS_dict_path));
+    CHECK(symbol_table != nullptr);
+    resource->symbol_table = symbol_table;
+  } else {  // Without LM, symbol_table is the same as unit_table
+    resource->symbol_table = unit_table;
+  }
 
   if (!FLAGS_context_path.empty()) {
     LOG(INFO) << "Reading context " << FLAGS_context_path;
@@ -167,7 +176,8 @@ std::shared_ptr<DecodeResource> InitDecodeResourceFromFlags() {
     ContextConfig config;
     config.context_score = FLAGS_context_score;
     resource->context_graph = std::make_shared<ContextGraph>(config);
-    resource->context_graph->BuildContextGraph(contexts, symbol_table);
+    resource->context_graph->BuildContextGraph(contexts,
+                                               resource->symbol_table);
   }
 
   PostProcessOptions post_process_opts;

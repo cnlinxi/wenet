@@ -1,5 +1,4 @@
 // Copyright (c) 2016 Personal (Binbin Zhang)
-// Created on 2016-08-15
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 
 #ifndef FRONTEND_WAV_H_
 #define FRONTEND_WAV_H_
@@ -70,13 +70,13 @@ class WavReader {
     }
     // check "riff" "WAVE" "fmt " "data"
 
-    // Skip any subchunks between "fmt" and "data".  Usually there will
-    // be a single "fact" subchunk, but on Windows there can also be a
-    // "list" subchunk.
+    // Skip any sub-chunks between "fmt" and "data".  Usually there will
+    // be a single "fact" sub chunk, but on Windows there can also be a
+    // "list" sub chunk.
     while (0 != strncmp(header.data, "data", 4)) {
       // We will just ignore the data in these chunks.
       fseek(fp, header.data_size, SEEK_CUR);
-      // read next subchunk
+      // read next sub chunk
       fread(header.data, 8, sizeof(char), fp);
     }
 
@@ -122,7 +122,7 @@ class WavReader {
   int num_samples() const { return num_samples_; }
 
   ~WavReader() {
-    if (data_ != NULL) delete[] data_;
+    delete[] data_;
   }
 
   const float* data() const { return data_; }

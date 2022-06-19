@@ -70,18 +70,18 @@ export GLOG_logtostderr=1
 export GLOG_v=2
 wav_path=test.wav
 model_dir=./20210602_unified_transformer_server
-./build/decoder_main \
+./build/bin/decoder_main \
     --chunk_size -1 \
     --wav_path $wav_path \
     --model_path $model_dir/final.zip \
-    --dict_path $model_dir/words.txt 2>&1 | tee log.txt
+    --unit_path $model_dir/units.txt 2>&1 | tee log.txt
 ```
 
 `decoder_main`工具支持两种wav文件模式：
  * 使用`--wav_path`指定单个文件，一次识别单个wav文件。
  * 使用`--wav_scp`指定一个.scp格式的wav列表，一次识别多个wav文件。
 
-执行 `./build/decoder_main --help`  可以了解更多的参数意义。
+执行 `./build/bin/decoder_main --help`  可以了解更多的参数意义。
 
 ## 基于websocket的在线识别服务
 
@@ -97,11 +97,11 @@ model_dir=./20210602_unified_transformer_server
 export GLOG_logtostderr=1
 export GLOG_v=2
 model_dir=./20210602_unified_transformer_server
-./build/websocket_server_main \
+./build/bin/websocket_server_main \
     --port 10086 \
     --chunk_size 16 \
     --model_path $model_dir/final.zip \
-    --dict_path $model_dir/words.txt 2>&1 | tee server.log
+    --unit_path $model_dir/units.txt 2>&1 | tee server.log
 ```
 
 上述服务启动后，会监听 10086 端口。若想使用其他端口，请修改 `--port` 对应的参数.
@@ -118,7 +118,7 @@ model_dir=./20210602_unified_transformer_server
 export GLOG_logtostderr=1
 export GLOG_v=2
 wav_path=test.wav
-./build/websocket_client_main \
+./build/bin/websocket_client_main \
     --hostname 127.0.0.1 --port 10086 \
     --wav_path $wav_path 2>&1 | tee client.log
 ```
